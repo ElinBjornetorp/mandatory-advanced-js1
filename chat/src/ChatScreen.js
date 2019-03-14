@@ -1,11 +1,16 @@
 
 import React, { Component } from 'react';
 import io from 'socket.io-client';
+import Emojify from 'react-emojione'; //Emojify is a component
+import ScrollToBottom from "react-scroll-to-bottom";
 
 class ChatScreen extends Component {
   constructor(props) {
     super(props);
-    this.state = {messages: []};
+    this.state = {
+      messages: [],
+      errorMessage: false,
+    };
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
@@ -16,6 +21,11 @@ class ChatScreen extends Component {
     //Showing a message 'connected' in the log when socket is connected
     this.socket.on('connect', function(){
       console.log('connected');
+    });
+
+    //Showing a message 'disconnected' in the log when socket is disconnected
+    this.socket.on('disconnect', function(){
+      console.log('disconnected');
     });
 
     //All messages received from socket will be put in state:messages
@@ -37,9 +47,9 @@ class ChatScreen extends Component {
     });
   }
 
-  //This function is for turning socket off when the user logs out
+  //Disconnecting socket when the user logs out
   componentWillUnmount() {
-
+    this.socket.disconnect();
   }
 
   sendMessage(username, content) {
@@ -50,39 +60,88 @@ class ChatScreen extends Component {
   }
 
   handleSubmit(username, content) {
+    // << 1: Checking that the message is between 1 and 200 characters long >>
+    let contentIsOk = content.length <= 200 && content.length > 0;
 
-    // << 1: Sending message >>
-    this.sendMessage(username, content);
+    // << 2: If ok, send message and update state:messages >>
+    if(contentIsOk) {
 
-    // << 2: Updating state:messages >>
+      console.log('This message is ok.');
 
-    //Finding out the nr of the latest message
-    let messagesLength = this.state.messages.length;
-    let latestMessageId = this.state.messages[messagesLength - 1].id;
-    let latestMessageNr = parseFloat(latestMessageId.split('-')[1]);
+      //Removing error message
+      this.setState({errorMessage: false});
 
-    //Creating an object out of the new message
-    let newMessage = {
-      username: username,
-      content: content,
-      id: 'message-' + (latestMessageNr + 1),
-    };
+      //Sending message
+      this.sendMessage(username, content);
 
-    //Adding the new object to state:messages
-    let messages = this.state.messages.slice();
-    messages.push(newMessage);
-    this.setState({messages:messages});
+      //Finding out the nr of the latest message
+      let messagesLength = this.state.messages.length;
+      let latestMessageId = this.state.messages[messagesLength - 1].id;
+      let latestMessageNr = parseFloat(latestMessageId.split('-')[1]);
+
+      //Creating an object out of the new message
+      let newMessage = {
+        username: username,
+        content: content,
+        id: 'message-' + (latestMessageNr + 1),
+      };
+
+      //Adding the new object to state:messages
+      let messages = this.state.messages.slice();
+      messages.push(newMessage);
+      this.setState({messages:messages});
+    }
+    else {
+      console.log('This message is not ok.');
+      this.setState({errorMessage: true});
+    }
+
+  }
+
+  convertToLinks(string) {
+
+    // debugger;
+
+    //Splitting string
+    let words = string.split(" ");
+
+    //Creating regex:s
+    let regex1 = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/;
+    let regex2 = /[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/;
+
+    //Looping through the array with 'map'
+    //Returning a link component if the word is a link
+    const convertedArray = words.map((word) => { // <-- convertedArray will contain strings and link-components
+      if(regex1.test(word)) {
+        return <Link url={word}/>; //This will replace the string with a link component
+      }
+      else if(regex2.test(word)) {
+        return <LinkWithHttpAdded url={word}/>; //This will replace the string with a link component
+      }
+
+      return word;
+    });
+
+    let newArray = convertedArray.map((word) => {
+      return [word, " "];
+    });
+
+    return newArray;
   }
 
   render() {
-    return (
-      <div className="chat-screen">
-        <header>EasyChat</header>
-        <p className="whoIsLoggedIn-paragraph">{this.props.username} is logged in.</p>
-        <MessageArea messages={this.state.messages}/>
-        <MessageInput onSubmit={this.handleSubmit} username={this.props.username}/>
-      </div>
-    );
+      return (
+        <ScrollToBottom>
+        <div className="chat-screen">
+          <p>EasyChat</p>
+          <p className="whoIsLoggedIn-paragraph">{this.props.username} is logged in.</p>
+          <button className="log-out-button" onClick={this.props.onClick}>Log out</button>
+          <MessageArea messages={this.state.messages} convertToLinks={this.convertToLinks}/>
+          <MessageInput onSubmit={this.handleSubmit} username={this.props.username}/>
+          {this.state.errorMessage ? <ErrorMessage /> : null}
+        </div>
+        </ScrollToBottom>
+      );
   }
 }
 
@@ -96,7 +155,7 @@ class MessageArea extends Component {
 
     //Filling the array with Message components
     for(let message of messages) {
-      messageComponent = <Message username={message.username} content={message.content} key={message.id}/>;
+      messageComponent = <Message username={message.username} content={message.content} key={message.id} convertToLinks={this.props.convertToLinks}/>;
       messageComponents.push(messageComponent);
     }
 
@@ -110,10 +169,13 @@ class MessageArea extends Component {
 
 class Message extends Component {
   render() {
+    //Converting links
+    let convertedContent = this.props.convertToLinks(this.props.content);
+
     return(
       <div className="message">
         <p className="message__username">Username: {this.props.username}</p>
-        <p className="message__content">Content: {this.props.content}</p>
+        <Emojify className="message__content">Content: {convertedContent}</Emojify>
       </div>
     );
   }
@@ -144,6 +206,31 @@ class MessageInput extends Component {
         <button className="message-input__button" type="submit">Send</button>
       </form>
     );
+  }
+}
+
+class ErrorMessage extends Component {
+  constructor(props) {
+    super(props);
+    //Scroll down...
+  }
+
+  render() {
+    return (
+      <p>Maximum length is 200 characters, minimum 1 character. Try again!</p>
+    );
+  }
+}
+
+class Link extends Component {
+  render() {
+    return <a href={this.props.url}>{this.props.url}</a>;
+  }
+}
+
+class LinkWithHttpAdded extends Component {
+  render() {
+    return <a href={'http://'+this.props.url}>{this.props.url}</a>;
   }
 }
 

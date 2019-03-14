@@ -1,18 +1,30 @@
 
 import React, { Component } from 'react';
 
-// ----------- Login screen ------------------------------------------
-
 class LoginScreen extends Component {
     render() {
-      return (
-        <form onSubmit={this.props.onSubmit}>
-          <Input/>
-          <LoginButton/>
-        </form>
-      );
+      if(this.props.errorMessage) {
+        return (
+          <form onSubmit={this.props.onSubmit}>
+            <Input/>
+            <LoginButton/>
+            <p>The username must be no longer than 12 characters. It can contain letters, digits, space and -.</p>
+            <p>Oops! Did you really read the instructions?</p>
+            <p>Try again!</p>
+          </form>
+        );
+      }
+      else {
+        return (
+          <form onSubmit={this.props.onSubmit}>
+            <Input/>
+            <LoginButton/>
+            <p>The username must be no longer than 12 characters. It can contain letters, digits, space and -.</p>
+          </form>
+        );
+      }
     }
-  }
+}
 
 class Input extends Component {
     render() {
