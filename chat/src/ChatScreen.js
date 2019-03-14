@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import Emojify from 'react-emojione'; //Emojify is a component
 import ScrollToBottom from "react-scroll-to-bottom";
 
+// ------------------ Component: Chat screen ---------------------------
 class ChatScreen extends Component {
   constructor(props) {
     super(props);
@@ -138,13 +139,14 @@ class ChatScreen extends Component {
           <button className="log-out-button" onClick={this.props.onClick}>Log out</button>
           <MessageArea messages={this.state.messages} convertToLinks={this.convertToLinks}/>
           <MessageInput onSubmit={this.handleSubmit} username={this.props.username}/>
-          {this.state.errorMessage ? <ErrorMessage /> : null}
+          {this.state.errorMessage ? <ErrorMessageForChatScreen /> : null}
         </div>
         </ScrollToBottom>
       );
   }
 }
 
+// ------------------ Component: Message area ---------------------------
 class MessageArea extends Component {
   render() {
     let messages = this.props.messages;
@@ -167,6 +169,7 @@ class MessageArea extends Component {
   }
 }
 
+// ------------------ Component: Message ---------------------------
 class Message extends Component {
   render() {
     //Converting links
@@ -181,6 +184,8 @@ class Message extends Component {
   }
 }
 
+// ------------------ Component: Message input ---------------------------
+//             << Includes a textarea and a button >>
 class MessageInput extends Component {
   onSubmit = (e) => {
       //Preventing form being sent
@@ -199,9 +204,7 @@ class MessageInput extends Component {
 
   render() {
     return(
-      <form
-      className="message-input"
-      onSubmit={this.onSubmit}>
+      <form className="message-input" onSubmit={this.onSubmit}>
         <textarea className="message-input__textarea"></textarea>
         <button className="message-input__button" type="submit">Send</button>
       </form>
@@ -209,12 +212,8 @@ class MessageInput extends Component {
   }
 }
 
-class ErrorMessage extends Component {
-  constructor(props) {
-    super(props);
-    //Scroll down...
-  }
-
+// ------------------ Component: Error message (chat screen) ---------------------------
+class ErrorMessageForChatScreen extends Component {
   render() {
     return (
       <p>Maximum length is 200 characters, minimum 1 character. Try again!</p>
@@ -222,12 +221,15 @@ class ErrorMessage extends Component {
   }
 }
 
+// ------------------ Component: Link ---------------------------
 class Link extends Component {
   render() {
     return <a href={this.props.url}>{this.props.url}</a>;
   }
 }
 
+// ------------------ Component: Link with http added  ---------------------------
+//                     << Adds http protocol to url >>
 class LinkWithHttpAdded extends Component {
   render() {
     return <a href={'http://'+this.props.url}>{this.props.url}</a>;
