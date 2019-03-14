@@ -134,12 +134,18 @@ class ChatScreen extends Component {
       return (
         <ScrollToBottom>
         <div className="chat-screen">
-          <p>EasyChat</p>
-          <p className="whoIsLoggedIn-paragraph">{this.props.username} is logged in.</p>
-          <button className="log-out-button" onClick={this.props.onClick}>Log out</button>
-          <MessageArea messages={this.state.messages} convertToLinks={this.convertToLinks}/>
-          <MessageInput onSubmit={this.handleSubmit} username={this.props.username}/>
-          {this.state.errorMessage ? <ErrorMessageForChatScreen /> : null}
+          <header>
+            <h1>EasyChat</h1>
+            <div className="log-out-div">
+              <p className="whoIsLoggedIn-paragraph">{this.props.username} is logged in.</p>
+              <button className="log-out-button" onClick={this.props.onClick}>Log out</button>
+            </div>
+          </header>
+          <main>
+            <MessageArea messages={this.state.messages} convertToLinks={this.convertToLinks}/>
+            <MessageInput onSubmit={this.handleSubmit} username={this.props.username}/>
+            {this.state.errorMessage ? <ErrorMessageForChatScreen /> : null}
+          </main>
         </div>
         </ScrollToBottom>
       );
@@ -177,8 +183,8 @@ class Message extends Component {
 
     return(
       <div className="message">
-        <p className="message__username">Username: {this.props.username}</p>
-        <Emojify className="message__content">Content: {convertedContent}</Emojify>
+        <p className="message__username">{this.props.username}</p>
+        <Emojify className="message__content">{convertedContent}</Emojify>
       </div>
     );
   }
@@ -205,7 +211,7 @@ class MessageInput extends Component {
   render() {
     return(
       <form className="message-input" onSubmit={this.onSubmit}>
-        <textarea className="message-input__textarea"></textarea>
+        <textarea className="message-input__textarea" rows="4" cols="50"></textarea> <br/>
         <button className="message-input__button" type="submit">Send</button>
       </form>
     );
@@ -216,7 +222,7 @@ class MessageInput extends Component {
 class ErrorMessageForChatScreen extends Component {
   render() {
     return (
-      <p>Maximum length is 200 characters, minimum 1 character. Try again!</p>
+      <p className="message-input__errormessage">Maximum length is 200 characters, minimum 1 character. Try again!</p>
     );
   }
 }

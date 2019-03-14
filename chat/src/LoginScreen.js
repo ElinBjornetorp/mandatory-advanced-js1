@@ -53,7 +53,7 @@ class LoginScreen extends Component {
 
   render() {
     return (
-      <form onSubmit={this.onSubmit}>
+      <form onSubmit={this.onSubmit} className="login-screen">
         <Input value={this.state.input} onChange={this.onChange} />
         <LoginButton/>
         <p>The username must be no longer than 12 characters. It can contain letters, digits, space and -.</p>
